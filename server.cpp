@@ -10,6 +10,10 @@
 #include <string.h>
 #include <vector>
 #include <sstream>
+
+#include <fcntl.h> // for open
+#include <unistd.h> // for close
+#include<pthread.h>
 using namespace std;
 #define switchs(str); string compStr = str; //switchs -- версия 
 //switch для строк. Изначально присваивает щначение str переменной
@@ -95,6 +99,33 @@ string parseQuery(char *query, map<int, string> &map) {
         return "Something went wrong. Check your query syntax.";
     }
 }
+
+struct threadParams {
+    int * socket;
+    map<int, string> * baseMap;
+};
+
+void * socketThread (void *arg) {
+    //int sock = *((int *)arg);
+    threadParams params = *((threadParams *)arg);
+    int sock = *(params.socket);
+
+    char buf[1024];
+    int bytes_read;
+    map<int, string> &map = *params.baseMap;
+    while(1)
+    {
+        bytes_read = recv(sock, buf, 1024, 0);
+        if(bytes_read <= 0) break;
+        string a = parseQuery(buf, map);
+        const char * answer = "";
+        answer = a.c_str();
+        send(sock, answer, (int)strlen(answer), 0);
+        cout << "query passed" << endl;
+    }
+    close(sock);
+    cout << "Connection closed" << endl;    
+}
 int main(int argc, char *argv[])
 {
     if(argc > 1) {
@@ -107,7 +138,7 @@ int main(int argc, char *argv[])
     }
     cout << "Listening on port " << PORT << endl;
     map<int, string> map;
-    int sock, listener;
+    int listener;
     struct sockaddr_in addr;
     char buf[1024];
     int bytes_read;
@@ -127,31 +158,23 @@ int main(int argc, char *argv[])
         perror("bind");
         exit(2);
     }
-
+    pthread_t thr; 
     listen(listener, 1);
     cout.flush();
     while(1)
     {
-        sock = accept(listener, NULL, NULL);
+        int sock = accept(listener, NULL, NULL);
         if(sock < 0)
         {
             perror("accept");
             exit(3);
         }
-
-        while(1)
-        {
-            bytes_read = recv(sock, buf, 1024, 0);
-            if(bytes_read <= 0) break;
-            string a = parseQuery(buf, map);
-            const char * answer = "";
-            answer = a.c_str();
-            send(sock, answer, (int)strlen(answer), 0);
-            cout << "query passed" << endl;
+        threadParams params;
+        params.socket = &sock;
+        params.baseMap = &map;
+        if(pthread_create(&thr, NULL, socketThread, &params) != 0) {
+            cout << "Failed to create thread";
         }
-    
-        close(sock);
-        cout << "Connection closed" << endl;
         cout.flush();
     }
     
