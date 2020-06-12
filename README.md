@@ -10,8 +10,8 @@ Run client: `./client -p [PORT] -h [HOST]`
 Queries are similar with terminal options, that makes process of using easier.
 
 To make query use this pattern: `[QUERYTYPE] [KEY] [VALUE]`
-`[KEY]` should be a number
-`[VALUE]` is not necessary in some types of queries.
+- `[KEY]` should be a number
+- `[VALUE]` is not necessary in some types of queries.
 
 `[QUERYTYPE]` has different variaties:
 
