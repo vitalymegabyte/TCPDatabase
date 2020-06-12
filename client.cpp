@@ -12,7 +12,7 @@ char message[256];
 char buf[256];
 int PORT = 5000;
 
-bool has_only_digits(const string s){
+bool isNumber(const string s){
   return s.find_first_not_of( "0123456789-" ) == string::npos;
 }
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
     int sock;
     struct sockaddr_in addr;
-
+    cout << "Connecting to " << PORT;
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
     {
