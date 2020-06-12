@@ -29,9 +29,6 @@ bool isNumber(const string s){
 }
 
 bool contains(map<int, string> &map, int key) {
-    for(auto i : map){
-        cout << i.first  << ' ';
-    }
     return map.find(key) != map.end();
 }
 
@@ -63,7 +60,7 @@ string parseQuery(char *query, map<int, string> &map) {
     int key;
     string value;
     stringstream answer;
-    bool success = true;
+    bool success = false;
     if(vec.size() > 1 && isNumber(vec[1])) { //Общее условие почти для всех. Синтаксис предусматривает: [ACTION] [KEY] [VALUE]. 
                                              //При этом третье значение в некоторых типах запросов опускается. Поэтому 
                                              //обязательными условиями являются длина в 2 сектора, и валидный ключ
@@ -74,20 +71,21 @@ string parseQuery(char *query, map<int, string> &map) {
                     value = vec[2];
                     success = add(map, key, value);
                     answer << "Successfully added " << key << "=>'" << value << "'";
-                } else {
-                    success = false;
+                    success = true;
                 }
             }
             cases("-g") {
                 value = get(map, key);
                 success = value != "";
                 answer << key << "=>'" << value << "'";
+                success = true;
             }
             cases("-c") {
                 if(contains(map, key))
                     answer << "TRUE";
                 else
                     answer << "FALSE";
+                success = true;
             }
     } else {
         success = false;
@@ -122,6 +120,7 @@ void * socketThread (void *arg) {
         answer = a.c_str();
         send(sock, answer, (int)strlen(answer), 0);
         cout << "query passed" << endl;
+        cout << answer << endl;
     }
     close(sock);
     cout << "Connection closed" << endl;    

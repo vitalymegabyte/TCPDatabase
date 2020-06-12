@@ -6,11 +6,15 @@
 #include <unistd.h>
 #include <iostream>
 #include <string.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 using namespace std;
 
-char message[256];
-char buf[256];
+const bufferSize = 1024;
+char message[bufferSize];
+char buf[buffersize];
 int PORT = 5000;
+char * HOST = "127.0.0.1";
 
 bool isNumber(const string s){
   return s.find_first_not_of( "0123456789-" ) == string::npos;
@@ -24,12 +28,16 @@ int main(int argc, char *argv[])
                 PORT = atoi(argv[i + 1]);
                 i++;
             }
+            if(strcmp(argv[i], "-h") == 0 && i + 1 < argc) {
+                HOST = argv[i + 1];
+                i++;
+            }
         }
     }
 
     int sock;
     struct sockaddr_in addr;
-    cout << "Connecting to " << PORT;
+    cout << "Connecting to " << PORT << endl;
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
     {
@@ -41,6 +49,7 @@ int main(int argc, char *argv[])
     printf(buf); 
     addr.sin_port = htons(PORT);
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    inet_aton(HOST, &addr.sin_addr);
     if(connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
     {
         perror("connect");
@@ -50,7 +59,7 @@ int main(int argc, char *argv[])
     while(1) {  
         memset(&buf, 0, sizeof(buf));
         cout << "Введите запрос:\n";
-        cin.getline(message, 256);
+        cin.getline(message, bufferSize);
         send(sock, message, sizeof(message), 0);
         recv(sock, buf, sizeof(message), 0);
         cout << buf << endl;
